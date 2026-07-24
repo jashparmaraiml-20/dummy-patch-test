@@ -1,13 +1,16 @@
 from flask import Flask, request, make_response
+import secrets
 app = Flask(__name__)
 
 @app.route("/data")
 def data():
-    origin = "https://example.com" if request.headers.get("Origin") == "https://example.com" else None
+    origin = request.headers.get("Origin")
     resp = make_response("sensitive_data")
-    resp.headers["Access-Control-Allow-Origin"] = origin
-    resp.headers["Access-Control-Allow-Credentials"] = "true"
-    resp.set_cookie("session_id", "secret123", httponly=True, secure=True)
+    if origin == "https://example.com":
+        resp.headers["Access-Control-Allow-Origin"] = origin
+        resp.headers["Access-Control-Allow-Credentials"] = "true"
+    session_token = secrets.token_urlsafe(32)
+    resp.set_cookie("session_id", session_token, httponly=True, secure=True, samesite="Lax")
     return resp
 
 if __name__ == "__main__":
